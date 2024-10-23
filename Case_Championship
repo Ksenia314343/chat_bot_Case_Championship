@@ -1,0 +1,168 @@
+import asyncio
+import nest_asyncio
+from aiogram import Bot, Dispatcher, types
+from aiogram import F, Router
+from aiogram.filters import Command
+from aiohttp import ClientSession
+import random
+import logging
+import pytz
+from aiogram.types import FSInputFile
+
+
+bot = Bot(token="7851726775:AAGTTKcQEnsfBTl6XBpC9fZR16TImpezBkg")
+dp = Dispatcher()
+router = Router()
+
+
+support_words = [
+    "Вы справитесь!",
+    "Не сдавайтесь!",
+    "У вас все получится!",
+    "Вы на правильном пути!",
+    "Держитесь!",
+    "Каждый день — это новый шанс!",
+    "Вы сильнее, чем думаете!",
+    "Вы можете это сделать!",
+]
+
+@router.message(Command('support'))
+async def send_support(message: Message):
+    support_message = random.choice(support_words)
+    await message.answer(support_message)
+
+async def main():
+    dp.include_router(router)
+
+    async with ClientSession() as session:
+        await dp.start_polling(bot, session=session)
+
+@router.message(Command('start'))
+async def send_welcome(message: Message):
+    kb = [
+        [
+            types.KeyboardButton(text='Какие условия необходимо учитывать при проведении мозгового штурма'),
+            types.KeyboardButton(text='Как сделать красивую презентацию?'),
+            types.KeyboardButton(text='Как мне узнать какого числа у меня защита?'),
+            types.KeyboardButton(text='Где можно посмотреть разбор заданий прошлого года?'),
+            types.KeyboardButton(text='Какие рекомендации есть по публичным выступлениям?')
+        ]
+    ]
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=kb,
+        resize_keyboard=True )
+    await message.answer(
+       "Добро пожаловать!\n\n"
+        "Я бот, который поможет ответить вам на ваши вопросы возникающие в ходе решения кейса.\n\n"
+        "Вот что я умею:\n"
+        "- Даю рекомендации о проведении мозгового штурма\n"
+        "- Делюсь советами по созданию презентации\n"
+        "- Помогаю узнать дату защиты\n"
+        "- Могу подсказать , где можно найти задания прошлого года\n"
+        "- Даю рекомендации по публичным выступлениям?\n\n"
+        "Нажмите на кнопку, чтобы задать ваш вопрос.\n\n"
+        "Основные команды чат бота:\n\n"
+        "При вводе с клавиатуры /start вы вернетесь к начальному выбору\n"
+        "При вводе с клавиатуры /help веведутся контакты для вопросов , ответы на которые отсутсвуют в данном боте, если вы не хотите ждать помощника в данном чат-боте\n"
+        "При вводе с клавиатуры /support веведутся мотивирующие фразы\n"
+        "При вводе с клавиатуры /additionally веведутся дополнительные материалы по кейс-чемпионату\n\n"
+        "При вводе с клавиатуры вопроса на которой нет ответа в данном боте к вам присоеденится человек , через некоторое время\n",
+        reply_markup=keyboard)
+
+@router.message(Command('additionally'))
+async def handle_presentation(message: Message):
+    kb = [
+        [
+            types.KeyboardButton(text='Отправить PDF файл'),
+            types.KeyboardButton(text='Отправить изображение')
+        ]
+    ]
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=kb,
+        resize_keyboard=True
+    )
+    await message.answer("Выберите, что отправить:", reply_markup=keyboard)
+
+
+
+@router.message(F.text == "Отправить изображение")
+async def send_file(message: types.Message):
+    file_path = "/content/img6-1.jpg" 
+    file = FSInputFile(file_path) 
+    await message.answer_document(file) 
+
+
+@router.message(F.text == "Отправить PDF файл")
+async def send_file(message: types.Message):
+    file_path = "/content/Пособие ментора.pdf" 
+    file = FSInputFile(file_path) 
+    await message.answer_document(file) 
+
+
+@router.message(F.text == 'Как сделать красивую презентацию?')
+async def handle_presentation(message: Message):
+ await message.answer("ПОСТРОЙТЕ ЕДИНУЮ ЛОГИКУ ОФОРМЛЕНИЯ (СОБЛЮДАЯ ПРАВИЛА)\n\n"
+"1. ОДИНАКОВАЯ ВЕРСТКА СЛАЙДОВ \n\n "
+"-По крайней мере один тип верстки для основных слайдов, другой тип - для разбивочных) \n\n"
+"2. ШРИФТЫ БЕЗ ЗАСЕЧЕК ИЗ ОДНОГО СЕМЕЙСТВА \n\n"
+"-Без курсива, подчеркивания и выравнивания по ширине, и КАПСА \n"
+"-Достаточно 1-3 (1-2 в идеале) шрифтов \n"
+"3. 2-3 ОСНОВНЫХ ЦВЕТА ВО ВСЕЙ ПРЕЗЕНТАЦИИ \n\n"
+"4. КОРРЕКТНАЯ РАБОТА С ВИЗУАЛЬНЫМИ ЭЛЕМЕНТАМИ \n\n"
+"Графики, иконки, таблицы и пр. \n"
+"5. НАЛИЧИЕ ОБЯЗАТЕЛЬНЫХ ЭЛЕМЕНТОВ \n\n"
+"Нумерация слайдов, наличие источников, единицы измерения и подписей к диаграмма\n")
+
+@router.message(F.text == 'Какие условия необходимо учитывать при проведении мозгового штурма')
+async def handle_brainstorm(message: Message):
+    await message.answer("При проведении мозгового штурма необходимо придерживаться нескольких правил:\n\n"
+                         "1. Оптимальное время для проведения мозгового штурма — от 30 минут до полутора часов. Менее 30 минут — недостаточно для того, чтобы мозг включился в работу и участники могли генерировать творческие идеи. С другой стороны, более полутора часов могут привести к усталости команды и непродуктивному общению.\n\n"
+                         "2. В процессе мозгового штурма важно генерировать как можно больше вариантов, не акцентируя внимание на их качестве. Чем больше идей будет предложено, тем выше вероятность того, что среди них найдётся по-настоящему ценное решение.\n\n"
+                         "3. Во время мозгового штурма участники должны «отключить» внутреннего критика и свободно высказывать любые идеи, не задумываясь об их качестве, разумности или целесообразности. Критический анализ и оценка идей допустимы только после завершения сессии мозгового штурма.\n\n")
+
+@router.message(F.text == 'Как мне узнать какого числа у меня защита?')
+async def handle_defense_date(message: Message):
+    await message.answer("Дату защиты в вашем регионе можно узнать на сайте организатора в вашем регионе, вот актуальная ссылка https://olymp.hse.ru/championship/place")
+
+@router.message(F.text == 'Где можно посмотреть разбор заданий прошлого года?')
+async def handle_defense_date(message: Message):
+    await message.answer("Данную информацию можно найти по ссылке https://olymp.hse.ru/championship/tasks")
+
+@router.message(F.text == 'Какие рекомендации есть по публичным выступлениям?')
+async def handle_defense_date(message: Message):
+    await message.answer("Ключ к успешному выступлению — хорошая подготовка. Перед выступлением избавьтесь от неожиданностей:\n\n"
+                         "- узнайте, перед кем будете выступать (возраст, количество людей);\n"
+                         "- изучите формат выступления (онлайн/оффлайн, тайминг);\n"
+                         "- подготовьте контент (составьте текст выступления);\n"
+                         "- выучите текст (необязательно говорить дословно, но база должна быть в памяти);\n"
+                         "- подготовьте шпаргалку (не текст целиком, только тезисы);\n"
+                         "- продумайте внешний вид (не всегда официальный стиль является единственно верным. Общие элементы в форме приветствуются).\n\n"
+                         "Если перед началом выступления вы испытываете серьёзное волнение:\n\n"
+                         "- выровняйте дыхание (есть несколько методик дыхания для избавления от стресса);\n"
+                         "- избавьтесь от лишнего адреналина (небольшая физическая активность);\n"
+                         "- разомните речевой аппарат (например, по упражнениям книги Алфёровой Л.Д. «Речевой тренинг: дикция и произношение»)\n")
+
+@router.message(Command('help'))
+async def send_help(message: Message):
+    await message.answer("Если у вас возникнут вопросы, ответы на которые отсутствуют в этом боте, пожалуйста, обратитесь к своему ментору. Если у вас все еще остались вопросы, вы можете написать на почту организаторам case@hse.ru!")
+
+
+@router.message(F.text)
+async def repeat_text(message: Message):
+    message_time = message.date.astimezone(pytz.timezone('Europe/Moscow'))
+    current_hour = message_time.hour # Отладочные сообщения
+    print(f"Текущее локальное время: {message_time}")
+    print(f"Текущий час: {current_hour}")
+
+    if 6 <= current_hour < 18:
+        greeting = "Хорошего дня, с вами обязательно свяжутся."
+    else:
+        greeting = "Хорошего вечера, с вами обязательно свяжется человек."
+
+    имя_пользователя = message.from_user.first_name
+    await message.answer(f"{greeting} {имя_пользователя}, Ваш вопрос: {message.text}")
+
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
